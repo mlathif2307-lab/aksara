@@ -146,9 +146,9 @@ Login owner: email `owner`, kata sandi sama dengan `OWNER_KEY`. Detail lengkap a
 
 | GitHub | Peran |
 | --- | --- |
-| [@mlathif2307-lab](https://github.com/mlathif2307-lab) | Pemilik repo |
-| [@afzaljodityavieri](https://github.com/afzaljodityavieri-lab) | Kolaborator |
-| [@adityayosafat](https://github.com/adityayosafat) | Kolaborator |
+| [@mlathif2307-lab](https://github.com/mlathif2307-lab) | ketua tim |
+| [@afzaljodityavieri](https://github.com/afzaljodityavieri-lab) | anggota tim |
+| [@adityayosafat](https://github.com/adityayosafat) | anggota tim |
 
 ## Lisensi
 
