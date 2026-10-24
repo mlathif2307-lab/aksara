@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AKSARA — Perjalanan Memasuki Dunia Pengetahuan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Manrope:wght@300..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav id="nav" aria-label="Toko"></nav>
+<div id="mnu" hidden aria-label="Menu halaman"></div>
+<canvas id="gl" aria-hidden="true"></canvas>
+<main>
+<section data-p='beranda' id="stage" aria-label="Perjalanan sebuah buku">
+ <div class="pin">
+  <div id="veil" aria-hidden="true"><div><p class="m">Buku adalah jendela dunia</p><p class="d">Ilmu adalah cahaya kehidupan</p><span class="ar">↓</span></div></div>
+  <h1 id="ttl" class="d">LENTERA</h1>
+  <p id="sub" class="m">Perjalanan memasuki dunia pengetahuan</p>
+  <span class="brand d">AKSARA</span>
+  <div class="hud m" id="hud" aria-hidden="true"><div><span>&nbsp;</span><span>Waktu baca <b id="rt">00:00</b></span></div><div><span>Sudut buku <b id="ang">0°</b></span><span>Kata <b id="wc">0</b></span></div></div>
+  <div id="caps" aria-live="polite">
+   <article><p class="m">Tahap 1 · Dari pikiran</p><h3>Draf pertama</h3><p>Kalimat pertama ditulis. Belum rapi, tapi idenya mulai hidup di atas kertas.</p></article>
+   <article><p class="m">Tahap 2 · Dari naskah</p><h3>Penyuntingan mendalam</h3><p>Tiap paragraf dibaca ulang, dipangkas, dan ditulis lagi sampai enak dibaca.</p></article>
+   <article><p class="m">Tahap 3 · Ke mesin cetak</p><h3>Cetak letterpress</h3><p>Huruf timbal ditekan ke kertas katun, jadi tiap halaman punya tekstur yang bisa diraba.</p></article>
+   <article><p class="m">Tahap 4 · Ke pembaca</p><h3>Di tangan pembaca</h3><p>Sebuah buku baru benar-benar selesai saat ada yang membukanya dan mulai membaca.</p></article>
+  </div>
+  <div id="inkw" aria-hidden="true"><svg viewBox="0 0 1000 100"><g fill="none" stroke="#c9a45c" stroke-width="2.2" stroke-linecap="round"><path d="M0 70C60 10 120 10 250 55" stroke-opacity=".12" stroke-dasharray="3 7"/><path d="M250 55C300 95 380 95 500 45" stroke-opacity=".12" stroke-dasharray="3 7"/><path d="M500 45C560 5 640 5 750 60" stroke-opacity=".12" stroke-dasharray="3 7"/><path d="M750 60C820 100 900 75 1000 25" stroke-opacity=".12" stroke-dasharray="3 7"/></g><g id="legs" fill="none" stroke="#e9dcc0" stroke-width="2.4" stroke-linecap="round"><path pathLength="1" d="M0 70C60 10 120 10 250 55"/><path pathLength="1" d="M250 55C300 95 380 95 500 45"/><path pathLength="1" d="M500 45C560 5 640 5 750 60"/><path pathLength="1" d="M750 60C820 100 900 75 1000 25"/></g><g id="nib"><circle r="9" fill="#a32121" opacity=".35"/><path d="M-3-9 0 4 3-9Z" fill="#fff"/></g></svg></div>
+ </div>
+</section>
+
+<section data-p='beranda' class="sol" id="ed" aria-labelledby="edt">
+ <p class="m">Edisi spesial</p><h2 id="edt">Pilih edisi yang kamu mau.</h2>
+ <div class="eds" id="eds"></div><div class='tb'><button class='btn' data-a='go' data-id='katalg' style='width:auto;margin:0'><class='btn' data-a='go' data-id='paket' style='width:auto;margin:0'><class='btn' data-a='go' data-id='buyback' style='width:auto;margin:0'><class='btn' data-a='go' data-id='kustom' style='width:auto;margin:0'><class='btn' data-a='go' data-id='inspirasi' style='width:auto;margin:0'><class='btn' data-a='go' data-id='kontak' style='width:auto;margin:0'></div>
+</section>
+
+<section data-p='katalog' class="sol" id="kat" aria-labelledby="katt" style="padding-top:0">
+ <p class="m">Katalog</p><h2 id="katt">Buku dan alat tulis untuk kuliah.</h2>
+ <div class="tb"><input id="q" type="search" placeholder="Cari produk…" aria-label="Cari produk"><select id="cat" aria-label="Kategori"></select><select id="srt" aria-label="Urutkan"><option value="">Urutkan</option><option value="a">Harga termurah</option><option value="d">Harga termahal</option><option value="n">Nama A–Z</option></select><input id="pmax" type="range" min="10" max="500" step="10" value="500" aria-label="Harga maksimal"><span class="m" id="pl"></span></div>
+ <div class="gr" id="gr"></div>
+</section>
+
+<section data-p='paket' class="sol" id="kit" aria-labelledby="kitt" style="padding-top:0">
+ <p class="m">Paket semester</p><h2 id="kitt">Paket kuliah sesuai jurusan dan semestermu.</h2>
+ <div class="tb"><select id="kf" aria-label="Fakultas"></select><select id="km" aria-label="Jurusan"></select><select id="ks" aria-label="Semester"></select><button class="btn" id="kb" style="width:auto;margin:0">Lihat paket</button></div>
+ <div id="kr"></div>
+</section>
+
+<section data-p='buyback' class="sol" id="swp" aria-labelledby="swt" style="padding-top:0">
+ <p class="m">Tukar &amp; buyback</p><h2 id="swt">Punya buku bekas? Tukar jadi kredit belanja.</h2>
+ <form class="tb" id="sw"><input id="sq" required maxlength="80" placeholder="ISBN atau judul buku" aria-label="ISBN atau judul"><select id="sk" aria-label="Kondisi"><option>Sangat baik</option><option>Baik</option><option>Cukup</option></select><button class="btn" style="width:auto;margin:0">Cek nilai</button></form>
+ <div id="sr"></div>
+</section>
+
+<section data-p='kustom' class="sol" id="cus" aria-labelledby="cust" style="padding-top:0">
+ <p class="m">Custom</p><h2 id="cust">Bikin alat tulismu sendiri.</h2>
+ <div class="po">
+  <div><label class="m">Jenis<select id="cj"><option value="p11">Buku catatan · Rp65.000</option><option value="p12">Parker Jotter custom · Rp85.000</option></select></label>
+   <label class="m">Nama yang dicantumkan<input id="cm" maxlength="24" placeholder="Mis. Rina Putri"></label>
+   <label class="m">Kertas<select id="cp"><option>Garis</option><option>Kotak</option><option>Titik</option><option>Polos</option></select></label>
+   <label class="m">Sampul gotik<select id="cc"><option>Gotik Hitam</option><option>Gotik Merah Darah</option><option>Gotik Ungu Malam</option></select></label>
+   <button class="btn" data-a="cb">Tambah ke keranjang</button></div>
+  <div id="pv" aria-live="polite"></div>
+ </div>
+</section>
+
+<section data-p='inspirasi' class="sol" id="pg-inspirasi" aria-label="Inspirasi karya ilmiah" style="padding-top:0"></section>
+<section data-p='tentang' class="sol" id="pg-tentang" aria-label="Tentang kami" style="padding-top:0"></section>
+<section data-p='kontak' class="sol" id="pg-kontak" aria-label="Kontak kami" style="padding-top:0"></section>
+
+<section data-p='beranda' class="sol" id="po" aria-labelledby="pot" style="padding-top:0">
+ <div class="po">
+  <div><p class="m">Pre Order</p><h2 id="pot">Amankan edisimu lebih dulu.</h2><p style="color:var(--dim);max-width:28rem">Belum perlu bayar dan tidak mengikat. Kami kabari lewat email begitu cetakan berikutnya dibuka.</p>
+   <p class="m" style="margin-top:2rem">Cetakan berikutnya dibuka dalam</p>
+   <div id="cd" role="timer"></div></div>
+  <form id="f" novalidate aria-describedby="fs">
+   <label class="m">Nama<input name="n" required autocomplete="name" placeholder="Isi namamu"></label>
+   <label class="m">Email<input name="e" type="email" required autocomplete="email" placeholder="Isi emailmu"></label>
+   <label class="m">Edisi<select name="s" id="sel"><option>Edisi Naskah</option><option selected>Edisi Kolektor</option><option>Edisi Arsip</option></select></label>
+   <button class="btn" type="submit">Pre Order edisi ini</button>
+   <p id="fs" role="status" class="m" style="min-height:1.4rem;margin-top:14px"></p>
+  </form>
+ </div>
+</section>
+</main>
+<dialog id="dlg" aria-label="Jendela toko"></dialog>
+<div id="toast" popover="manual" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/hero.js"></script>
+<script src="js/data.js"></script>
+<script src="js/extra.js"></script>
+<script src="js/shop.js"></script>
+</body>
+</html>

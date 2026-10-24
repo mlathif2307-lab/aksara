@@ -1,0 +1,32 @@
+# ===== Rahasia & konfigurasi lokal (JANGAN PERNAH di-commit) =====
+.env
+.env.*
+!.env.example
+
+# ===== Vercel (berisi ID proyek lokal) =====
+.vercel/
+
+# ===== Dependensi & hasil build =====
+node_modules/
+dist/
+build/
+
+# ===== Log =====
+*.log
+npm-debug.log*
+
+# ===== Sistem operasi =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Editor =====
+.vscode/
+.idea/
+*.swp
+
+# ===== Arsip & berkas sementara =====
+*.zip
+*.rar
+*.tmp
+*.bak
