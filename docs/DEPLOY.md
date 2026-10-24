@@ -78,4 +78,4 @@ Buka `https://<domain-kamu>/api/content` di peramban.
 
 - Jangan pernah meng-commit `.env.local` atau menempelkan token/kunci ke chat, issue, atau Pull Request.
 - Jika rahasia bocor, ganti segera: buat ulang `OWNER_KEY` dan rotasi token di dashboard Upstash.
-- Ganti kata sandi akun demo di `js/shop.js` (bagian boot di paling bawah) sebelum situs dipublikasikan. Akun demo hanya berlaku di mode lokal, tetapi sebaiknya tidak memakai kata sandi bawaan.
+- Ganti kata sandi akun di `js/shop.js` (bagian boot di paling bawah) sebelum situs dipublikasikan. Akun demo hanya berlaku di mode lokal, tetapi sebaiknya tidak memakai kata sandi bawaan.
