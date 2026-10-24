@@ -1,4 +1,4 @@
-# AKSARA — Perjalanan Memasuki Dunia Pengetahua
+# AKSARA — Perjalanan Memasuki Dunia Pengetahuan
 
 Toko buku dan perlengkapan akademik berbasis web. Tampilan statis (HTML, CSS, JavaScript biasa, tanpa langkah build) dengan API serverless di Vercel dan penyimpanan Upstash Redis, sehingga konten, harga, stok, dan inbox dibagi ke semua pengunjung.
 
