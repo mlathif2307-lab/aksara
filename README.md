@@ -152,4 +152,4 @@ Login owner: email `owner`, kata sandi sama dengan `OWNER_KEY`. Detail lengkap a
 
 ## Lisensi
 
-Hak cipta © 2026 Tim AKSARA. Semua hak dilindungi.
+Hak cipta © 2026 Tim kelompok komputer konoha. Semua hak dilindungi.
