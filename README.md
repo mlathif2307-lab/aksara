@@ -6,9 +6,9 @@ Toko buku dan perlengkapan akademik berbasis web. Tampilan statis (HTML, CSS, Ja
 [![Database: Upstash Redis](https://img.shields.io/badge/database-Upstash%20Redis-00E9A3?logo=redis&logoColor=white)](https://upstash.com)
 [![JavaScript](https://img.shields.io/badge/code-JavaScript-F7DF1E?logo=javascript&logoColor=black)](#teknologi)
 
-**Demo:** <https://aksara-iota-gilt.vercel.app>
+**akses online:** <https://aksara-iota-gilt.vercel.app>
 
-## Daftar Isi
+## Datar Isi
 
 - [Fitur](#fitur)
 - [Teknologi](#teknologi)
