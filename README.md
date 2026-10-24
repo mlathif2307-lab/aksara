@@ -26,7 +26,7 @@ Toko buku dan perlengkapan akademik berbasis web. Tampilan statis (HTML, CSS, Ja
 - **Delapan halaman** dalam satu `index.html`, dipilih lewat hash: beranda, katalog, paket, buyback, kustom, inspirasi, tentang, kontak.
 - **Beranda interaktif:** animasi buku 3D (Three.js), HUD, pena tinta, hitung mundur, dan form pre order.
 - **Katalog** produk per kategori dan jurusan, dengan keranjang dan pembayaran simulasi.
-- **Inspirasi karya ilmiah:** daftar artikel, skripsi, makalah, dan jurnal, dengan asisten rekomendasi berbasis aturan (Sobat Suki).
+- **Inspirasi karya ilmiah:** daftar artikel, skripsi, makalah, dan jurnal, dengan asisten rekomendasi berbasis aturan (Sobat aksara).
 - **Inbox:** pengunjung bertanya lewat halaman Kontak, admin membalas dari panel.
 - **Panel bertab** untuk admin dan owner: produk, pesanan, inbox, konten, artikel, staf.
 - **Keuangan:** modal produk, laba per unit, margin, nilai stok, BOP bulanan, dan titik impas (BEP). Data ini hanya bisa dibaca admin dan owner.
