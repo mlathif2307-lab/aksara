@@ -17,7 +17,6 @@ Toko buku dan perlengkapan akademik berbasis web. Tampilan statis (HTML, CSS, Ja
 - [Mode Lokal dan Mode Server](#mode-lokal-dan-mode-server)
 - [Variabel Lingkungan](#variabel-lingkungan)
 - [Peran Pengguna](#peran-pengguna)
-- [Mengedit Konten](#mengedit-konten)
 - [Dokumentasi](#dokumentasi)
 - [Tim](#tim)
 
@@ -96,11 +95,8 @@ Buka alamat yang tertera. Jangan membuka `index.html` dengan klik ganda, gunakan
 | Data tersimpan di | localStorage peramban masing-masing | Upstash Redis, dibagi ke semua pengunjung |
 | Syarat | Tidak ada | Variabel lingkungan terisi (lihat di bawah) |
 | Akun | Akun demo di peramban | Owner lewat `OWNER_KEY`, admin dibuat owner |
-| Cocok untuk | Uji coba tampilan | Situs yang dipublikasikan |
 
-Pesanan, keranjang, akun pembeli, dan pembayaran tetap **simulasi di peramban** di kedua mode, jadi belum cocok untuk transaksi sungguhan. Untuk toko sungguhan, data perlu dipindah ke backend penuh. Skemanya ada di `database/schema.sql`.
-
-Untuk mode server di komputermu sendiri:
+mode server di komputer sendiri:
 
 ```bash
 cp .env.example .env.local        # Windows PowerShell: Copy-Item .env.example .env.local
@@ -127,13 +123,6 @@ Tanpa variabel Redis, semua endpoint menjawab `{"configured":false}` dan situs b
 | **owner** | Semua wewenang admin, ditambah mengangkat dan mencopot admin |
 
 Login owner: email `owner`, kata sandi sama dengan `OWNER_KEY`. Detail lengkap ada di [docs/PANDUAN-ADMIN.md](docs/PANDUAN-ADMIN.md).
-
-## Mengedit Konten
-
-- **Produk:** ubah `js/data.js` (format baris dijelaskan di komentar). Untuk foto asli, isi elemen ke-11 dengan `img/namafile.jpg`.
-- **Teks, warna, ukuran:** `index.html` dan `css/style.css`.
-- **Setelah mengubah data produk,** bersihkan localStorage peramban agar data baru terbaca.
-- **Teks Tentang dan Kontak, artikel, harga, stok:** diedit dari panel saat login sebagai admin atau owner, tanpa menyentuh kode.
 
 ## Dokumentasi
 
