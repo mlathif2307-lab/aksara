@@ -133,11 +133,11 @@ Login owner: email `owner`, kata sandi sama dengan `OWNER_KEY`. Detail lengkap a
 
 ## Tim
 
-| GitHub | Peran |
-| --- | --- |
-| [@mlathif2307-lab](https://github.com/mlathif2307-lab) | ketua tim |
-| [@afzaljodityavieri](https://github.com/afzaljodityavieri-lab) | anggota tim |
-| [@adityayosafat](https://github.com/adityayosafat) | anggota tim |
+| No | Nama | Tugas |
+| --- | --- | --- |
+| 1 | **Muhammad Lathif Al Kausar** ([@mlathif2307-lab](https://github.com/mlathif2307-lab))<br>*Ketua kelompok* | Menentukan konsep dan fitur, membangun frontend dan API dengan bantuan AI, mengatur deployment di Vercel dan Upstash, serta menyusun dokumentasi. |
+| 2 | **Afzaljoditya Vieri** ([@afzaljodityavieri](https://github.com/afzaljodityavieri-lab))<br>*Anggota kelompok* | Membantu dalam hal dokumentasi dan penyusunan laporan. |
+| 3 | **Aditya Yosafat Situngkir** ([@adityayosafat](https://github.com/adityayosafat))<br>*Anggota kelompok* | Membantu menentukan konsep dan fitur, membangun frontend dan API dengan bantuan AI, membantu deployment di Vercel dan Upstash, serta membantu menyusun dokumentasi. |
 
 ## Lisensi
 
