@@ -26,6 +26,7 @@ function clean(b, old) {
 module.exports = async (req, res) => {
   try {
     if (!L.ok) return L.send(res, 200, { configured: false });
+    if (L.shield(req, res)) return;
     if (req.method === 'GET') {
       const raw = await L.rc('GET', KEY);
       return L.send(res, 200, { configured: true, data: raw ? JSON.parse(raw) : {} });

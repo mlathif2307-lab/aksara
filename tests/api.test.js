@@ -18,23 +18,32 @@ global.fetch = async (url, init) => {
   else if (C === 'DEL') { result = store.delete(a[0]) ? 1 : 0; }
   else if (C === 'INCR') { const n = (+store.get(a[0]) || 0) + 1; store.set(a[0], String(n)); result = n; }
   else if (C === 'EXPIRE') result = 1;
+  else if (C === 'TTL') result = 100;
   else if (C === 'HGET') result = hashOf(a[0]).has(a[1]) ? hashOf(a[0]).get(a[1]) : null;
+  else if (C === 'HEXISTS') result = hashOf(a[0]).has(a[1]) ? 1 : 0;
   else if (C === 'HSET') { hashOf(a[0]).set(a[1], String(a[2])); result = 1; }
+  else if (C === 'HSETNX') { if (hashOf(a[0]).has(a[1])) result = 0; else { hashOf(a[0]).set(a[1], String(a[2])); result = 1; } }
   else if (C === 'HDEL') result = hashOf(a[0]).delete(a[1]) ? 1 : 0;
   else if (C === 'HLEN') result = hashOf(a[0]).size;
   else if (C === 'HMGET') result = a.slice(1).map(f => hashOf(a[0]).has(f) ? hashOf(a[0]).get(f) : null);
   else if (C === 'HGETALL') result = [...hashOf(a[0])].flat();
+  else if (C === 'EVAL') { const [, , key, f, old, nx] = a; if (hashOf(key).get(f) === old) { hashOf(key).set(f, nx); result = 1; } else result = 0; }
   else throw new Error('perintah tiruan belum ada: ' + C);
   return { json: async () => ({ result }) };
 };
 
-/* ---------- req/res tiruan ---------- */
-async function call(file, { method = 'GET', body, query = {}, tok, ip = '10.0.0.1' } = {}) {
-  const req = { method, body, query, headers: { 'x-forwarded-for': ip } };
-  if (tok) req.headers.authorization = 'Bearer ' + tok;
+/* ---------- req/res tiruan ----------
+   Token CSRF yang dikembalikan saat login dicatat, lalu otomatis dikirim sebagai X-CSRF-Token
+   (seperti yang dilakukan peramban) pada setiap permintaan yang membawa token sesi itu. */
+const csrfOf = new Map();
+async function call(file, { method = 'GET', body, query = {}, tok, ip = '10.0.0.1', headers = {} } = {}) {
+  const req = { method, body, query, headers: { 'x-forwarded-for': ip, host: 'aksara.test', ...headers } };
+  if ((method === 'POST' || method === 'PUT' || method === 'PATCH') && !headers['content-type']) req.headers['content-type'] = 'application/json';
+  if (tok) { req.headers.authorization = 'Bearer ' + tok; if (csrfOf.has(tok) && !('x-csrf-token' in req.headers)) req.headers['x-csrf-token'] = csrfOf.get(tok); }
   const out = { code: 200, json: null, headers: {} };
   const res = { setHeader: (k, v) => { out.headers[k] = v; }, status: c => { out.code = c; return { json: o => { out.json = o; } }; } };
   await API(file)(req, res);
+  if (out.json && out.json.tok && out.json.csrf) csrfOf.set(out.json.tok, out.json.csrf);
   return out;
 }
 
@@ -51,6 +60,7 @@ const t = (nama, ok, ket = '') => { rows.push({ nama, ok: !!ok, ket }); if (!ok)
   r = await call('auth.js', { method: 'POST', body: { e: 'owner', p: OWNER }, ip: '1.1.1.2' });
   const ownerTok = r.json.tok;
   t('Login owner dengan kunci benar berhasil', r.json.ok === true && /^[0-9a-f]{64}$/.test(ownerTok || ''), 'token acak 64 heksa');
+  t('Login mengembalikan token CSRF acak 64 heksa yang berbeda dari token sesi', /^[0-9a-f]{64}$/.test(r.json.csrf || '') && r.json.csrf !== ownerTok);
   t('Kunci sesi di Redis berupa hash, bukan token mentah', store.has('ak:ses:' + require('crypto').createHash('sha256').update(ownerTok).digest('hex')) && !store.has('ak:ses:' + ownerTok));
   t('Jawaban API tidak boleh di-cache', r.headers['Cache-Control'] === 'no-store', 'Cache-Control: no-store');
 
@@ -66,13 +76,24 @@ const t = (nama, ok, ket = '') => { rows.push({ nama, ok: !!ok, ket }); if (!ok)
   r = await call('staff.js', {});
   t('GET /api/staff tanpa login ditolak', r.code === 401, 'HTTP ' + r.code);
 
+  /* 2b. CSRF */
+  r = await call('staff.js', { method: 'POST', tok: ownerTok, headers: { 'x-csrf-token': '0'.repeat(64) }, body: { n: 'Adm', e: 'csrf@x.id', p: 'sandi-admin-12345' } });
+  t('Permintaan dengan token CSRF salah ditolak (403)', r.code === 403, 'HTTP ' + r.code);
+  r = await call('staff.js', { method: 'POST', tok: ownerTok, headers: { origin: 'https://situs-jahat.example' }, body: { n: 'Adm', e: 'csrf@x.id', p: 'sandi-admin-12345' } });
+  t('Permintaan dari Origin asing ditolak (403)', r.code === 403, 'HTTP ' + r.code);
+  r = await call('staff.js', { method: 'POST', tok: ownerTok, headers: { 'sec-fetch-site': 'cross-site' }, body: { n: 'Adm', e: 'csrf@x.id', p: 'sandi-admin-12345' } });
+  t('Permintaan Sec-Fetch-Site: cross-site ditolak (403)', r.code === 403, 'HTTP ' + r.code);
+  r = await call('staff.js', { method: 'POST', tok: ownerTok, headers: { 'content-type': 'text/plain' }, body: '{}' });
+  t('Isi bukan application/json ditolak (415)', r.code === 415, 'HTTP ' + r.code);
+  t('Tidak ada admin yang tersimpan dari percobaan CSRF di atas', hashOf('ak:admins').size === 0);
+
   /* 3. Owner mengangkat admin */
   r = await call('staff.js', { method: 'POST', tok: ownerTok, body: { n: 'Adm', e: 'adm@x.id', p: 'pendek' } });
   t('Kata sandi admin < 10 karakter ditolak', r.code === 400, 'HTTP ' + r.code);
   r = await call('staff.js', { method: 'POST', tok: ownerTok, body: { n: 'Admin Uji', e: 'Admin@Toko.id', p: 'sandi-admin-12345' } });
   t('Owner berhasil mengangkat admin', r.code === 201, 'HTTP ' + r.code);
   const rec = JSON.parse(hashOf('ak:admins').get('admin@toko.id') || 'null');
-  t('Kata sandi admin disimpan sebagai hash scrypt + salt, bukan teks asli', !!rec && /^[0-9a-f]{128}$/.test(rec.h) && rec.s && !JSON.stringify(rec).includes('sandi-admin-12345'), 'email dinormalkan huruf kecil');
+  t('Kata sandi admin disimpan sebagai hash scrypt + salt, bukan teks asli', !!rec && /^[0-9a-f]{128}$/.test(rec.h) && rec.s && rec.N === 32768 && rec.p === 3 && !JSON.stringify(rec).includes('sandi-admin-12345'), 'scrypt N=32768 r=8 p=3, email huruf kecil');
   r = await call('auth.js', { method: 'POST', body: { e: 'ADMIN@toko.id', p: 'sandi-admin-12345' }, ip: '1.1.1.3' });
   const admTok = r.json.tok;
   t('Admin dapat login (email tidak peka huruf besar/kecil)', r.json.ok === true && r.json.role === 'admin');
@@ -87,6 +108,23 @@ const t = (nama, ok, ket = '') => { rows.push({ nama, ok: !!ok, ket }); if (!ok)
   t('Admin tidak boleh mencopot admin', r.code === 403, 'HTTP ' + r.code);
   r = await call('finance.js', { method: 'PUT', tok: admTok, body: { cost: { p1: 50 }, bop: [{ n: 'Sewa', a: 1500 }] } });
   t('Admin boleh menyimpan modal dan BOP', r.code === 200 && r.json.cost.p1 === 50);
+
+  /* 3b. Akun pembeli */
+  r = await call('auth.js', { method: 'POST', body: { act: 'reg', n: 'Rina', e: 'rina@x.id', p: 'tanpaangka' }, ip: '4.4.4.4' });
+  t('Daftar pembeli: kata sandi tanpa angka ditolak', r.code === 400, 'HTTP ' + r.code);
+  r = await call('auth.js', { method: 'POST', body: { act: 'reg', n: 'Rina', e: 'rina@x.id', p: 'Rahasia2026' }, ip: '4.4.4.4' });
+  const buyTok = r.json.tok;
+  t('Daftar pembeli berhasil: sesi user + token CSRF', r.code === 201 && r.json.role === 'user' && /^[0-9a-f]{64}$/.test(r.json.csrf || ''), 'HTTP ' + r.code);
+  const br = JSON.parse(hashOf('ak:users').get('rina@x.id') || 'null');
+  t('Kata sandi pembeli disimpan sebagai hash scrypt + salt, bukan teks asli', !!br && /^[0-9a-f]{128}$/.test(br.h) && br.N === 32768 && !JSON.stringify(br).includes('Rahasia2026'));
+  r = await call('auth.js', { method: 'POST', body: { act: 'reg', n: 'Rina', e: 'rina@x.id', p: 'Rahasia2026' }, ip: '4.4.4.4' });
+  t('Email pembeli yang sama tidak bisa didaftarkan dua kali (409)', r.code === 409, 'HTTP ' + r.code);
+  r = await call('auth.js', { method: 'POST', body: { e: 'RINA@x.id', p: 'Rahasia2026' }, ip: '4.4.4.5' });
+  t('Pembeli dapat login', r.json.ok === true && r.json.role === 'user');
+  for (const [f, o] of [['staff.js', {}], ['finance.js', {}], ['inbox.js', { query: { all: '1' } }], ['content.js', { method: 'PUT', body: { prices: {} } }]]) {
+    r = await call(f, { tok: buyTok, ...o });
+    t('Sesi pembeli ditolak di /api/' + f.replace('.js', '') + ' (403)', r.code === 403, 'HTTP ' + r.code);
+  }
 
   /* 4. Sanitasi input */
   r = await call('content.js', { method: 'PUT', tok: admTok, body: {

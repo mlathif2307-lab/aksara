@@ -1,11 +1,11 @@
 /* Kelola admin — HANYA owner. GET: daftar admin. POST {n,e,p}: angkat admin baru. DELETE ?e=: copot admin. */
-const crypto = require('crypto');
 const L = require('./_lib');
 const A = 'ak:admins';
 
 module.exports = async (req, res) => {
   try {
     if (!L.ok) return L.send(res, 200, { configured: false });
+    if (L.shield(req, res)) return;
     if (!(await L.gate(req, res, 'owner'))) return;
     if (req.method === 'GET') {
       const all = await L.rc('HGETALL', A), out = [];
@@ -14,11 +14,10 @@ module.exports = async (req, res) => {
     }
     if (req.method === 'POST') {
       const b = req.body && typeof req.body === 'object' ? req.body : {}, n = L.str(b.n, 60), e = L.str(b.e, 120).toLowerCase(), p = String(b.p || '').slice(0, 200);
-      if (n.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) || p.length < 10) return L.send(res, 400, { error: 'Nama ≥2 karakter, email valid, kata sandi ≥10 karakter' });
+      if (n.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) || p.length < 10 || p.length > 128) return L.send(res, 400, { error: 'Nama ≥2 karakter, email valid, kata sandi 10–128 karakter' });
       if (await L.rc('HGET', A, e)) return L.send(res, 409, { error: 'Email sudah menjadi admin' });
       if ((await L.rc('HLEN', A)) >= 50) return L.send(res, 507, { error: 'Batas 50 admin tercapai' });
-      const s = crypto.randomBytes(16).toString('hex');
-      await L.rc('HSET', A, e, JSON.stringify({ n, e, s, h: crypto.scryptSync(p, s, 64).toString('hex'), at: Date.now() }));
+      await L.rc('HSET', A, e, JSON.stringify({ n, e, ...(await L.hashPw(p)), at: Date.now() }));
       return L.send(res, 201, { ok: true });
     }
     if (req.method === 'DELETE') {
@@ -29,5 +28,5 @@ module.exports = async (req, res) => {
     }
     res.setHeader('Allow', 'GET, POST, DELETE');
     L.send(res, 405, { error: 'Metode tidak didukung' });
-  } catch (e) { L.send(res, 500, { error: 'Kesalahan server' }); }
+  } catch (err) { console.error('staff:', err && err.message); L.send(res, 500, { error: 'Kesalahan server' }); }
 };

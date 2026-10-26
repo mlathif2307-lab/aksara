@@ -57,4 +57,6 @@ Tanpa server, akun dan peran disimpan di localStorage, jadi hanya berlaku di per
 | owner | `owner@aksara.example` | Bisa menambah dan mencopot admin di *Panel → Pengguna* |
 | admin | `admin@aksara.example` | Semua wewenang toko, tanpa kelola admin |
 
-Kata sandi demo ada di `js/shop.js`. Di mode server, akun demo tidak punya wewenang apa pun. Ganti kata sandi demo sebelum situs dipublikasikan.
+Kata sandi demo ada di `js/shop.js`. Di mode server, akun demo dibuang dari peramban dan tidak punya wewenang apa pun. Ganti kata sandi demo sebelum situs dipublikasikan.
+
+Akun pembeli di mode lokal di-hash PBKDF2 di peramban. Di mode server, pembeli mendaftar dan masuk lewat server dan kata sandinya di-hash scrypt di sana.

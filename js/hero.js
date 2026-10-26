@@ -2,17 +2,21 @@
 
 const $=s=>document.querySelector(s),cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),rg=(v,a,b)=>cl((v-a)/(b-a)),lp=(a,b,t)=>a+(b-a)*t,eo=t=>1-Math.pow(1-t,3),ei=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+/* Perangkat sentuh/mobile: hanya cara render GPU yang diringankan. Bentuk 3D, animasi, dan tampilan sama persis. */
+const MOB=matchMedia('(pointer:coarse)').matches||/Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&Math.min(screen.width,screen.height)<900);
+const PR_MAX=MOB?1.5:2,PR_MIN=MOB?.75:1;let PR=MOB?Math.min(devicePixelRatio,1.25):Math.min(devicePixelRatio,2);
 const caps=[...document.querySelectorAll('#caps article')],legs=[...document.querySelectorAll('#legs path')];
 const N=6,HD=['Draf Pertama','Penyuntingan Mendalam','Cetak Letterpress','Di Tangan Pembaca'];
 let G=null;
 
 /* ---------- scene ---------- */
 function build(){
- const R=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:true});
- R.setPixelRatio(Math.min(devicePixelRatio,2));R.outputEncoding=THREE.sRGBEncoding;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+ const R=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:true,stencil:false,powerPreference:'high-performance'});
+ R.setPixelRatio(PR);R.outputEncoding=THREE.sRGBEncoding;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+ if(MOB)R.shadowMap.autoUpdate=false; // bayangan lampu titik = 6 kali render adegan; di mobile diperbarui bergantian, bukan tiap frame
  const S=new THREE.Scene();S.background=new THREE.Color(0x0b0705);S.fog=new THREE.Fog(0x0b0705,10,24);
  const C=new THREE.PerspectiveCamera(38,1,.1,60);
- const tex=(w,h,f)=>{const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=8;return t};
+ const tex=(w,h,f)=>{const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=MOB?2:8;return t};
  const M=o=>new THREE.MeshStandardMaterial(o);
 
  // meja kayu
@@ -51,7 +55,18 @@ function build(){
  const dust=new THREE.Points(pg,new THREE.PointsMaterial({size:.05,vertexColors:true,transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending}));S.add(dust);
 
  const P0=new THREE.Vector3(0,7.4,8.8),P1=new THREE.Vector3(.5,6.3,5.8),P2=new THREE.Vector3(-.2,4.9,4.3),T0=new THREE.Vector3(0,.2,0),T1=new THREE.Vector3(0,.9,0),T2=new THREE.Vector3(0,.8,.3),T=new THREE.Vector3();
- const size=()=>{R.setSize(innerWidth,innerHeight);C.aspect=innerWidth/innerHeight;C.updateProjectionMatrix()};size();addEventListener('resize',size);
+ let sw=0,sh=0,rt=0;
+ const size=(force)=>{const w=innerWidth,h=innerHeight;if(!force&&w===sw&&h===sh)return;sw=w;sh=h;R.setPixelRatio(PR);R.setSize(w,h,!MOB);C.aspect=w/h;C.updateProjectionMatrix();needShadow=true};
+ let needShadow=true;
+ size(true);
+ // di mobile bilah alamat naik-turun memicu resize berkali-kali; buffer WebGL cukup dialokasi ulang sekali setelah gulir tenang
+ addEventListener('resize',()=>{if(!MOB)return size();clearTimeout(rt);rt=setTimeout(size,220)});
+ // resolusi dinamis: bila frame terasa berat, resolusi render turun sedikit; bila ringan, naik lagi (hanya di mobile)
+ let fa=0,fn=0,lt=0,cd=0;
+ const gov=(t)=>{if(!MOB||RM)return;if(lt){const d=t-lt;if(d<250){fa+=d;fn++}}lt=t;if(fn<45)return;const av=fa/fn;fa=0;fn=0;if(t<cd)return;
+  if(av>24&&PR>PR_MIN){PR=Math.max(PR_MIN,+(PR-.25).toFixed(2));cd=t+1500;size(true)}
+  else if(av<15.5&&PR<PR_MAX&&PR<devicePixelRatio){PR=Math.min(PR_MAX,+(PR+.25).toFixed(2));cd=t+4000;size(true)}};
+ let sf=0,lp0=-1,mv=false;
 
  return (p,t,rise,open)=>{
   bk.position.set(lp(-1.5,0,open),rise*.9+Math.sin(t/1100)*.04*rise,0);bk.rotation.y=lp(-.6,0,eo(rg(p,.1,.5)));
@@ -59,28 +74,33 @@ function build(){
   leaves.forEach((l,i)=>{const f=ei(rg(p,.52+i*.07,.63+i*.07));l.rotation.z=f*Math.PI;l.position.y=lp(.35+(N-i-1)*.012+.006,.07+i*.012,f)+Math.sin(f*Math.PI)*.4});
   const pa=eo(rg(p,0,.45)),pb=eo(rg(p,.5,1));C.position.lerpVectors(P0,P1,pa).lerp(P2,pb);T.lerpVectors(T0,T1,pa).lerp(T2,pb);
   const m=C.aspect<1?1+(1-C.aspect)*1.1:1;C.position.sub(T).multiplyScalar(m).add(T);C.lookAt(T);
-  if(!RM){const a=pg.attributes.position;for(let i=0;i<n;i++){let y=a.getY(i)+sp[i]*.01;if(y>8)y=0;a.setY(i,y);a.setX(i,a.getX(i)+Math.sin(t/2000+i)*.0015)}a.needsUpdate=true}
+  if(!RM){for(let i=0,j=0;i<n;i++,j+=3){let y=pos[j+1]+sp[i]*.01;if(y>8)y=0;pos[j+1]=y;pos[j]+=Math.sin(t/2000+i)*.0015}pg.attributes.position.needsUpdate=true}
   dust.material.opacity=lp(.9,.45,rg(p,0,.3));
-  R.render(S,C)}}
+  if(MOB){const mvNow=Math.abs(p-lp0)>2e-4||rise>.001;lp0=p;if(needShadow||(mvNow&&(++sf&1)===0)||(mv&&!mvNow)){R.shadowMap.needsUpdate=true;needShadow=false}mv=mvNow}
+  gov(t);R.render(S,C)}}
 
 /* ---------- gulir → adegan + HUD ---------- */
 let st,span,sp=0,cur=-1;const t0=performance.now();
 const meas=()=>{st=$('#stage');span=Math.max(1,st.offsetHeight-innerHeight)};meas();addEventListener('resize',meas);
 const nib=$('#nib');
+/* elemen di-cache dan nilai hanya ditulis bila berubah (hasil tampilan sama, kerja DOM jauh lebih sedikit) */
+const gl=$('#gl'),vl=$('#veil'),ttE=$('#ttl'),sbt=$('#sub'),hd=$('#hud'),rtE=$('#rt'),angE=$('#ang'),wcE=$('#wc'),ink=$('#inkw'),LEN=[],cc=new Map();
+const sS=(e,k,v)=>{let m=cc.get(e);if(!m)cc.set(e,m={});if(m[k]!==v){m[k]=v;e.style[k]=v}};
+const sT=(e,v)=>{if(e._v!==v){e._v=v;e.textContent=v}};
 function frame(t){
- const y=scrollY-st.offsetTop,p=cl(y/span);sp=RM?p:sp+(p-sp)*.09;
- $('#gl').style.visibility=y<st.offsetHeight?'':'hidden';
- if(y<st.offsetHeight){
+ const y=scrollY-st.offsetTop,p=cl(y/span);sp=RM?p:Math.abs(p-sp)<1e-5?p:sp+(p-sp)*.09;
+ const vis=y<st.offsetHeight;sS(gl,'visibility',vis?'':'hidden');
+ if(vis){
   const rise=eo(rg(sp,.12,.36)),open=ei(rg(sp,.34,.52)),clr=rg(sp,0,.12);
-  const v=$('#veil').style;v.opacity=1-clr;v.transform=`translateY(${-clr*24}vh) scale(${1+clr*.25})`;
-  const ti=eo(rg(sp,.1,.24)),to=rg(sp,.46,.56),h=$('#ttl').style;h.opacity=ti*(1-to);h.letterSpacing=lp(.6,.24,ti)+'em';h.filter=ti<.99?`blur(${(1-ti)*10}px)`:'';h.transform=`translateY(${-sp*6}vh)`;$('#sub').style.opacity=ti*(1-to);
-  $('#hud').style.opacity=rg(sp,.04,.12);
-  const secs=Math.floor((t-t0)/1000);$('#rt').textContent=String(secs/60|0).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');
-  $('#ang').textContent=Math.round(open*178)+'°';
-  const j=eo(rg(sp,.52,.98)),u=rg(sp,.52,.98)*4;$('#wc').textContent=Math.round(j*1e5).toLocaleString('id-ID');
+  sS(vl,'opacity',1-clr);sS(vl,'transform',`translateY(${-clr*24}vh) scale(${1+clr*.25})`);
+  const ti=eo(rg(sp,.1,.24)),to=rg(sp,.46,.56);sS(ttE,'opacity',ti*(1-to));sS(ttE,'letterSpacing',lp(.6,.24,ti)+'em');sS(ttE,'filter',ti<.99?`blur(${(1-ti)*10}px)`:'');sS(ttE,'transform',`translateY(${-sp*6}vh)`);sS(sbt,'opacity',ti*(1-to));
+  sS(hd,'opacity',rg(sp,.04,.12));
+  const secs=Math.floor((t-t0)/1000);sT(rtE,String(secs/60|0).padStart(2,'0')+':'+String(secs%60).padStart(2,'0'));
+  sT(angE,Math.round(open*178)+'°');
+  const j=eo(rg(sp,.52,.98)),u=rg(sp,.52,.98)*4,wn=Math.round(j*1e5);if(wcE._n!==wn){wcE._n=wn;wcE.textContent=wn.toLocaleString('id-ID')}
   const s=sp<.52?-1:cl(Math.floor(u),0,3);if(s!==cur){cur=s;caps.forEach((c,i)=>c.classList.toggle('on',i==s))}
-  $('#inkw').style.opacity=rg(sp,.5,.56)*(1-rg(sp,.99,1));
-  legs.forEach((l,i)=>{const k=eo(cl(u-i));l.style.strokeDasharray='1 1';l.style.strokeDashoffset=1-k;if(i==cl(Math.floor(u),0,3)){const q=l.getPointAtLength(l.getTotalLength()*k);nib.setAttribute('transform',`translate(${q.x} ${q.y})`)}});
+  sS(ink,'opacity',rg(sp,.5,.56)*(1-rg(sp,.99,1)));
+  legs.forEach((l,i)=>{const k=eo(cl(u-i));sS(l,'strokeDasharray','1 1');sS(l,'strokeDashoffset',1-k);if(i==cl(Math.floor(u),0,3)){if(!LEN[i])LEN[i]=l.getTotalLength();const q=l.getPointAtLength(LEN[i]*k);nib.setAttribute('transform',`translate(${q.x} ${q.y})`)}});
   if(G)G(sp,t,rise,open)}
  requestAnimationFrame(frame)}
 try{document.fonts.load('40px Michroma').catch(()=>0).finally(()=>{try{G=build()}catch(e){console.warn('WebGL tidak tersedia',e)}})}catch(e){}

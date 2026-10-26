@@ -135,3 +135,6 @@ html{overflow-x:clip}
 #nav button{font-size:9px;letter-spacing:.06em;padding:7px 9px}
 #mnu{left:8px}
 }
+
+/* Perangkat sentuh: hindari efek yang dihitung ulang GPU tiap frame di atas kanvas 3D (tampilan tetap sama) */
+@media (pointer:coarse){#nav{-webkit-backdrop-filter:none;backdrop-filter:none}#veil,#ttl{will-change:transform,opacity}}

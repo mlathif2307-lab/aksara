@@ -17,19 +17,21 @@ Toko buku dan perlengkapan akademik berbasis web. Tampilan statis (HTML, CSS, Ja
 - [Mode Lokal dan Mode Server](#mode-lokal-dan-mode-server)
 - [Variabel Lingkungan](#variabel-lingkungan)
 - [Peran Pengguna](#peran-pengguna)
+- [Keamanan dan Pengujian](#keamanan-dan-pengujian)
 - [Dokumentasi](#dokumentasi)
 - [Tim](#tim)
 
 ## Fitur
 
 - **Delapan halaman** dalam satu `index.html`, dipilih lewat hash: beranda, katalog, paket, buyback, kustom, inspirasi, tentang, kontak.
-- **Beranda interaktif:** animasi buku 3D (Three.js), HUD, pena tinta, hitung mundur, dan form pre order.
+- **Beranda interaktif:** animasi buku 3D (Three.js, dengan render yang diringankan di perangkat mobile), HUD, pena tinta, hitung mundur, dan form pre order.
 - **Katalog** produk per kategori dan jurusan, dengan keranjang dan pembayaran simulasi.
 - **Inspirasi karya ilmiah:** daftar artikel, skripsi, makalah, dan jurnal, dengan asisten rekomendasi berbasis aturan (Sobat aksara).
 - **Inbox:** pengunjung bertanya lewat halaman Kontak, admin membalas dari panel.
 - **Panel bertab** untuk admin dan owner: produk, pesanan, inbox, konten, artikel, staf.
 - **Keuangan:** modal produk, laba per unit, margin, nilai stok, BOP bulanan, dan titik impas (BEP). Data ini hanya bisa dibaca admin dan owner.
 - **Harga dan stok langsung:** admin mengubahnya dari kartu katalog, dan perubahan tersinkron ke semua pengunjung.
+- **Akun aman:** kata sandi di-hash scrypt di server dan setiap sesi dilindungi token CSRF.
 
 ## Teknologi
 
@@ -53,8 +55,8 @@ aksara/
 │   ├── extra.js           # Tentang, Kontak + inbox admin, Inspirasi, edit harga/stok, rekomendasi
 │   └── shop.js            # Toko, akun, panel admin, pembayaran simulasi
 ├── api/                   # Serverless functions (otomatis jadi /api/*)
-│   ├── _lib.js            # Helper bersama: Redis, sesi, peran, pembatas laju (bukan endpoint)
-│   ├── auth.js            # Login, cek sesi, logout
+│   ├── _lib.js            # Helper bersama: Redis, sesi, CSRF, hash kata sandi, peran, pembatas laju (bukan endpoint)
+│   ├── auth.js            # Login, daftar pembeli, cek sesi, ubah nama, logout
 │   ├── content.js         # Konten publik, harga, stok
 │   ├── finance.js         # Modal produk dan BOP (admin/owner)
 │   ├── inbox.js           # Pesan pengunjung dan balasan
@@ -62,6 +64,9 @@ aksara/
 ├── database/
 │   └── schema.sql         # Skema PostgreSQL untuk versi backend penuh (referensi)
 ├── img/                   # Foto produk
+├── tests/
+│   ├── api.test.js        # Uji API (Redis tiruan di memori)
+│   └── security.test.js   # Uji keamanan: CSRF, hash kata sandi, akun pembeli, peran
 ├── docs/
 │   ├── ARSITEKTUR.md      # Arsitektur, endpoint, kunci Redis, keamanan
 │   ├── DEPLOY.md          # Deploy dan pemecahan masalah
@@ -94,7 +99,8 @@ Buka alamat yang tertera. Jangan membuka `index.html` dengan klik ganda, gunakan
 | Cara menjalankan | `npm run dev` | `npx vercel dev` atau situs yang sudah di-deploy |
 | Data tersimpan di | localStorage peramban masing-masing | Upstash Redis, dibagi ke semua pengunjung |
 | Syarat | Tidak ada | Variabel lingkungan terisi (lihat di bawah) |
-| Akun | Akun demo di peramban | Owner lewat `OWNER_KEY`, admin dibuat owner |
+| Akun | Akun demo di peramban, kata sandi di-hash PBKDF2 | Owner lewat `OWNER_KEY`, admin dibuat owner, pembeli mendaftar sendiri (kata sandi di-hash scrypt di server) |
+| Cocok untuk | Uji coba tampilan | Situs yang dipublikasikan |
 
 mode server di komputer sendiri:
 
@@ -118,11 +124,33 @@ Tanpa variabel Redis, semua endpoint menjawab `{"configured":false}` dan situs b
 
 | Peran | Boleh |
 | --- | --- |
-| **user** | Belanja, mengirim pertanyaan, membaca balasan |
+| **user** | Belanja, mendaftar dan masuk dengan akun sendiri, mengirim pertanyaan, membaca balasan |
 | **admin** | Urusan toko: produk, harga/stok, pesanan, inbox, teks halaman, artikel, keuangan. Tidak bisa mengangkat atau mencopot admin |
 | **owner** | Semua wewenang admin, ditambah mengangkat dan mencopot admin |
 
 Login owner: email `owner`, kata sandi sama dengan `OWNER_KEY`. Detail lengkap ada di [docs/PANDUAN-ADMIN.md](docs/PANDUAN-ADMIN.md).
+
+## Keamanan dan Pengujian
+
+- **CSRF:** permintaan yang mengubah data hanya diterima dari situs sendiri dan berformat JSON, dan permintaan dengan sesi wajib membawa header `X-CSRF-Token` yang terikat ke sesi.
+- **Kata sandi:** admin dan pembeli di-hash scrypt (N=2^15, r=8, p=3) dengan salt acak per akun. Hash lama dinaikkan otomatis saat login.
+- **Wewenang:** semua pemeriksaan peran dilakukan di server. Sesi pembeli ditolak di semua endpoint admin.
+
+Jalankan pengujian dari akar repo (memakai Redis tiruan di memori, tanpa rahasia apa pun):
+
+```bash
+npm test                         # = node tests/api.test.js
+node tests/security.test.js
+```
+
+Detail lengkap ada di [docs/ARSITEKTUR.md](docs/ARSITEKTUR.md).
+
+## Mengedit Konten
+
+- **Produk:** ubah `js/data.js` (format baris dijelaskan di komentar). Untuk foto asli, isi elemen ke-11 dengan `img/namafile.jpg`.
+- **Teks, warna, ukuran:** `index.html` dan `css/style.css`.
+- **Setelah mengubah data produk,** bersihkan localStorage peramban agar data baru terbaca.
+- **Teks Tentang dan Kontak, artikel, harga, stok:** diedit dari panel saat login sebagai admin atau owner, tanpa menyentuh kode.
 
 ## Dokumentasi
 

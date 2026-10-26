@@ -4,10 +4,10 @@ Terima kasih sudah ikut mengembangkan AKSARA. Dokumen ini menjelaskan cara kerja
 
 ## 1. Persiapan
 
-1. Terima undangan kolaborator dari pemilik repo (`mlathif2307-lab`) lewat email atau notifikasi GitHub.
+1. Terima undangan kolaborator dari pemilik repo (`mlathif2307`) lewat email atau notifikasi GitHub.
 2. Clone repo:
    ```bash
-   git clone https://github.com/mlathif2307-lab/aksara.git
+   git clone https://github.com/mlathif2307/aksara.git
    cd aksara
    ```
 3. Jalankan lokal:
@@ -15,6 +15,12 @@ Terima kasih sudah ikut mengembangkan AKSARA. Dokumen ini menjelaskan cara kerja
    npm run dev
    ```
    Ini menjalankan **mode lokal** (data di localStorage), cukup untuk pekerjaan tampilan. Untuk menguji API (inbox, login staf, keuangan, dll.), jalankan `npx vercel dev` dengan `.env.local` berisi `OWNER_KEY` dan kredensial Upstash milikmu sendiri. Lihat bagian *Mode Lokal dan Mode Server* di [README](README.md). Tidak perlu meminta rahasia produksi.
+4. Jalankan pengujian API sebelum membuka Pull Request:
+   ```bash
+   npm test
+   node tests/security.test.js
+   ```
+   Keduanya memakai Redis tiruan di memori, jadi tidak butuh rahasia apa pun.
 
 ## 2. Alur Kerja
 

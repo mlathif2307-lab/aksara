@@ -6,6 +6,7 @@ const num = (v, max) => Math.min(max, Math.max(0, Math.round((+v || 0) * 100) / 
 module.exports = async (req, res) => {
   try {
     if (!L.ok) return L.send(res, 200, { configured: false });
+    if (L.shield(req, res)) return;
     if (!(await L.gate(req, res))) return;
     if (req.method === 'GET') {
       const raw = await L.rc('GET', K), d = raw ? JSON.parse(raw) : {};

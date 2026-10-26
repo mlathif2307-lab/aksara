@@ -4,11 +4,11 @@ const XT=(()=>{
 const KX='akx',JN=['Skripsi','Makalah','Jurnal','Artikel','Portal'],BD=['FTI','FEB','Umum'],SJ=['Pertanyaan website','Pesanan','Pembayaran','Lainnya'];
 let X={},SRV=false,ADS=null,pt=null,dirty=false,UN=0,PT='produk',FIN=null,ft=null,fp=false;
 const S=s=>document.querySelector(s),sv=()=>{try{localStorage.setItem(KX,JSON.stringify(X))}catch{}},fd=t=>new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}),sU=u=>/^https?:\/\//i.test(u)?esc(u):'#';
-const SS=()=>{try{return JSON.parse(sessionStorage.getItem('akt'))}catch{return null}},tok=()=>(SS()||{}).tok||'';
+const SS=()=>{try{return JSON.parse(sessionStorage.getItem('akt'))}catch{return null}},tok=()=>(SS()||{}).tok||'',csrf=()=>(SS()||{}).csrf||'';
 function load(){try{X=JSON.parse(localStorage.getItem(KX))||{}}catch{X={}}X.about=X.about||DEF.about;X.contact=X.contact||DEF.contact;X.articles=X.articles||DEF.articles.map(a=>({...a}));X.m=X.m||[];X.my=X.my||[];X.seen=X.seen||{};
  if(X.about.i&&X.about.i.startsWith('AKSARA lahir dari satu keyakinan'))X.about=DEF.about;
  if(X.contact.i&&X.contact.i.startsWith('Tulis pertanyaanmu soal website'))X.contact={...DEF.contact,em:X.contact.em,wa:X.contact.wa,jam:X.contact.jam,ad:(X.contact.ad||'').startsWith('Alamat toko (contoh)')?DEF.contact.ad:X.contact.ad}}
-async function api(u,o={}){try{const h={'Content-Type':'application/json'};if(o.admin&&tok())h.Authorization='Bearer '+tok();const r=await fetch(u,{method:o.method||'GET',headers:h,body:o.body?JSON.stringify(o.body):undefined}),j=await r.json().catch(()=>({}));return{st:r.status,...j}}catch{return null}}
+async function api(u,o={}){try{const h={'Content-Type':'application/json'};if(o.admin&&tok()){h.Authorization='Bearer '+tok();if((o.method||'GET')!=='GET'&&csrf())h['X-CSRF-Token']=csrf()}const r=await fetch(u,{method:o.method||'GET',headers:h,body:o.body?JSON.stringify(o.body):undefined}),j=await r.json().catch(()=>({}));return{st:r.status,...j}}catch{return null}}
 
 /* ---------- simpan: lokal selalu, server bila aktif ---------- */
 async function put(part,msg='Tersimpan'){sv();if(!SRV)return toast(msg+' di browser ini');
@@ -91,8 +91,8 @@ const TB={
   ms=[...ms].sort((a,b)=>b.at-a.at);return'<h4 class="m">Pertanyaan masuk ('+ms.filter(m=>!m.r).length+' belum dijawab)</h4>'+note+(ms.map(m=>`<div class="rw" style="display:block"><p class="m">${esc(m.n)} · ${esc(m.e)} · ${esc(m.s)} · ${fd(m.at)} <span class="chip${m.r?' on':''}">${m.r?'Dijawab':'Belum dijawab'}</span></p><p style="margin:.4rem 0">${esc(m.t)}</p><textarea data-rt="${esc(m.id)}" rows="3" maxlength="2000" placeholder="Tulis balasan…" aria-label="Balasan">${esc(m.r)}</textarea><p class="qt"><button data-a="irp" data-id="${esc(m.id)}">${m.r?'Perbarui balasan':'Kirim balasan'}</button><button data-a="idl" data-id="${esc(m.id)}">Hapus</button></p></div>`).join('')||'<p>Belum ada pertanyaan masuk.</p>')},
  konten:async()=>{const a=X.about,c=X.contact;return`<h4 class="m">Halaman Tentang</h4><form data-f="xa">${inp('t','Judul',a.t,120)}${ta('i','Pengantar',a.i,2)}${ta('ps','Paragraf (pisahkan dengan baris kosong)',a.ps.join('\n\n'),6)}${[0,1,2].map(i=>inp('vt'+i,'Kartu '+(i+1)+' · judul',(a.v[i]||{}).t||'',60)+inp('vd'+i,'Kartu '+(i+1)+' · isi',(a.v[i]||{}).d||'',300)).join('')}<button class="btn" type="submit">Simpan Tentang</button></form><h4 class="m">Halaman Kontak</h4><form data-f="xc">${inp('t','Judul',c.t,120)}${ta('i','Pengantar',c.i,2)}${inp('em','Email',c.em,120)}${inp('wa','WhatsApp',c.wa,30)}${inp('ad','Alamat',c.ad,200)}${inp('jam','Jam layanan',c.jam,120)}<button class="btn" type="submit">Simpan Kontak</button></form>`},
  artikel:async()=>`<h4 class="m">Tambah artikel rekomendasi</h4><form data-f="xr"><label class="m">Judul<input name="t" required maxlength="160"></label><label class="m">Tautan artikel (https://…)<input name="u" type="url" required maxlength="500" placeholder="https://"></label><label class="m">Jenis<select name="j">${JN.map(j=>`<option>${j}</option>`).join('')}</select></label><label class="m">Bidang<select name="b">${BD.map(b=>`<option>${b}</option>`).join('')}</select></label>${inp('y','Tahun',new Date().getFullYear(),4,'type="number" min="1990" max="2100"')}${inp('s','Sumber / penerbit','',60)}${inp('k','Kata kunci (untuk pencarian & AI)','',200)}<button class="btn" type="submit">Tambah artikel</button></form><h4 class="m">Daftar (${X.articles.length})</h4>`+X.articles.map(a=>`<div class="rw"><span>${esc(a.t)}<br><span class="m">${esc(a.j)} · ${esc(a.b)} · ${a.y}</span></span><button data-a="xad" data-id="${esc(a.id)}" data-w="1" aria-label="Hapus">✕</button></div>`).join(''),
- staf:async()=>{const r=await api('/api/staff',{admin:1});if(!r||r.st!==200)return err(r);return'<h4 class="m">Admin</h4><p class="m">Hanya owner yang bisa menambah atau mencopot admin.</p>'+(r.admins.map(a=>`<div class="rw"><span>${esc(a.n)}<br><span class="m">${esc(a.e)}</span></span><button data-a="sd" data-id="${esc(a.e)}" aria-label="Copot admin">✕</button></div>`).join('')||'<p>Belum ada admin selain owner.</p>')+`<form data-f="xs"><h4 class="m">Tambah admin</h4>${inp('n','Nama','',60,'required')}${inp('e','Email (dipakai untuk login)','',120,'type="email" required')}${inp('p','Kata sandi awal (min. 10 karakter)','',200,'type="password" required minlength="10" autocomplete="new-password"')}<button class="btn" type="submit">Tambah admin</button></form>`},
- pengguna:async()=>'<h4 class="m">Akun di browser ini</h4><p class="m">Hanya owner yang bisa menambah atau mencopot admin.</p>'+DB.u.map(u=>`<div class="rw"><span>${esc(u.n)}<br><span class="m">${esc(u.e)} · ${esc(u.r)}</span></span>${u.r==='owner'||u.id===U().id?'<span class="m">—</span>':`<span class="qt"><select data-a="ur" data-id="${u.id}" style="width:auto;margin:0"><option${u.r==='user'?' selected':''}>user</option><option${u.r==='admin'?' selected':''}>admin</option></select><button data-a="udl" data-id="${u.id}" aria-label="Hapus">✕</button></span>`}</div>`).join(''),
+ staf:async()=>{const r=await api('/api/staff',{admin:1});if(!r||r.st!==200)return err(r);return'<h4 class="m">Admin</h4>'+(r.admins.map(a=>`<div class="rw"><span>${esc(a.n)}<br><span class="m">${esc(a.e)}</span></span><button data-a="sd" data-id="${esc(a.e)}" aria-label="Copot admin">✕</button></div>`).join('')||'<p>Belum ada admin selain owner.</p>')+`<form data-f="xs"><h4 class="m">Tambah admin</h4>${inp('n','Nama','',60,'required')}${inp('e','Email (dipakai untuk login)','',120,'type="email" required')}${inp('p','Kata sandi awal (min. 10 karakter)','',200,'type="password" required minlength="10" autocomplete="new-password"')}<button class="btn" type="submit">Tambah admin</button></form>`},
+ pengguna:async()=>'<h4 class="m">Akun di browser ini</h4>'+DB.u.map(u=>`<div class="rw"><span>${esc(u.n)}<br><span class="m">${esc(u.e)} · ${esc(u.r)}</span></span>${u.r==='owner'||u.id===U().id?'<span class="m">—</span>':`<span class="qt"><select data-a="ur" data-id="${u.id}" style="width:auto;margin:0"><option${u.r==='user'?' selected':''}>user</option><option${u.r==='admin'?' selected':''}>admin</option></select><button data-a="udl" data-id="${u.id}" aria-label="Hapus">✕</button></span>`}</div>`).join(''),
  server:async()=>{const x=SS();return`<h4 class="m">Server</h4><p>Status: <b>${SRV?'Server aktif. Data dipakai bersama semua pengunjung.':'Server belum aktif. Data hanya tersimpan di browser ini.'}</b></p>${SRV?`<p>Kamu masuk sebagai <b>${esc(role())}</b>${dirty?'<br><span class="m">Ada perubahan yang belum terkirim ke server.</span>':''}</p>`:'<p class="m">Cara mengaktifkannya ada di README (bagian “Aktifkan server”): sambungkan Redis dan isi OWNER_KEY di Vercel.</p>'}`}};
 const TABS=()=>[['produk','Produk'],['keuangan','Keuangan'],['pesanan','Pesanan'],['inbox','Inbox'],['konten','Konten'],['artikel','Artikel'],...(OWN()?[[SRV?'staf':'pengguna',SRV?'Staf':'Pengguna']]:[])];
 async function panel(t){if(!ADM())return;if(t)PT=t;if(!TABS().some(x=>x[0]===PT))PT='produk';const body=await TB[PT]();
@@ -111,11 +111,22 @@ async function sub(k,d){
 async function rmA(id,w){X.articles=X.articles.filter(a=>a.id!==id);grid();if(w)panel('artikel');await put({articles:X.articles},'Artikel dihapus')}
 
 /* login staf lewat server (owner: email "owner" + OWNER_KEY; admin: email + kata sandi dari owner) */
-async function sLogin(e,p){if(!SRV)return false;const r=await api('/api/auth',{method:'POST',body:{e:String(e||'').trim(),p:String(p||'')}});if(!r)return false;if(r.st===429){toast(r.error,0);return true}if(!r.ok)return false;
- try{sessionStorage.setItem('akt',JSON.stringify({tok:r.tok,role:r.role,e:r.e,n:r.n}))}catch{}
+/* sesi dari server (staf maupun pembeli): token sesi + token CSRF disimpan di sessionStorage tab ini */
+function enter(r,msg){
+ try{sessionStorage.setItem('akt',JSON.stringify({tok:r.tok,csrf:r.csrf,role:r.role,e:r.e,n:r.n}))}catch{}
  let u=DB.u.find(x=>x.e===r.e);if(!u){u={id:'s'+Date.now().toString(36),n:r.n,e:r.e,s:'',h:'',r:'user',cr:0};DB.u.push(u)}
- DB.ses={id:u.id,x:Date.now()+72e5};SV();dlg.close();nv();toast('Selamat datang, '+r.n+' ('+r.role+')');if(dirty)put({prices:prices(),about:X.about,contact:X.contact,articles:X.articles},'Perubahan tertunda dikirim');return true}
-function out(){const t=tok();try{sessionStorage.removeItem('akt')}catch{}if(t&&SRV)fetch('/api/auth',{method:'DELETE',headers:{Authorization:'Bearer '+t}}).catch(()=>{})}
+ if(r.role==='user'&&u.r==='user'){u.s='';u.h='';delete u.v;delete u.it}
+ DB.ses={id:u.id,x:Date.now()+72e5};SV();dlg.close();nv();toast(msg);
+ if(dirty&&r.role!=='user')put({prices:prices(),about:X.about,contact:X.contact,articles:X.articles},'Perubahan tertunda dikirim');return true}
+async function sLogin(e,p){if(!SRV)return false;const r=await api('/api/auth',{method:'POST',body:{e:String(e||'').trim(),p:String(p||'')}});if(!r){toast('Server tidak bisa dihubungi, coba lagi',0);return true}if(r.st===429||r.st===403){toast(r.error||'Permintaan ditolak',0);return true}if(!r.ok)return false;
+ return enter(r,'Selamat datang, '+r.n+(r.role==='user'?'':' ('+r.role+')'))}
+/* daftar akun pembeli: kata sandi di-hash scrypt di server. q=true: diam-diam (dipakai saat memindahkan akun lama) */
+async function sReg(n,e,p,q){if(!SRV)return false;const r=await api('/api/auth',{method:'POST',body:{act:'reg',n,e,p}});
+ if(!r){if(!q)toast('Server tidak bisa dihubungi, coba lagi',0);return false}
+ if(r.st!==201||!r.ok){if(!q)toast(r.error||'Gagal membuat akun',0);return false}
+ return enter(r,q?'Selamat datang, '+r.n:'Akun berhasil dibuat. Selamat datang, '+r.n)}
+async function sName(n){if(!SRV||!tok()||role()!=='user')return;const r=await api('/api/auth',{method:'PATCH',admin:1,body:{n}});if(!r||r.st!==200)toast(r&&r.error?r.error:'Nama belum tersimpan di server',0)}
+function out(){const t=tok(),c=csrf();try{sessionStorage.removeItem('akt')}catch{}if(t&&SRV)fetch('/api/auth',{method:'DELETE',headers:{Authorization:'Bearer '+t,'X-CSRF-Token':c}}).catch(()=>{})}
 const nb=()=>`<button data-a="ubx">Inbox${UN?' ('+UN+')':''}</button>`;
 
 /* ---------- render semua + sinkron server ---------- */
@@ -123,6 +134,7 @@ const render=()=>{ADS=!!ADM();rAbout();rContact();rIns()};
 function sync(){if(!X.about||!!ADM()===ADS)return;render();cat()}
 async function init(){load();
  const r=await api('/api/content');if(r&&r.st===200&&r.configured){SRV=true;const d=r.data||{};if(d.about)X.about=d.about;if(d.contact)X.contact=d.contact;if(d.articles)X.articles=d.articles;sv();
+  DB.u=DB.u.filter(u=>u.r==='user');SV(); // peran staf hanya dari server; akun demo lokal dibuang
   if(d.prices){let ch=0;DB.p.forEach(p=>{const o=d.prices[p.id];if(o&&(o.p!==p.p||o.s!==p.s)){p.p=o.p;p.s=o.s;ch=1}});if(ch){SV();cat()}}
   if(tok()){const m=await api('/api/auth',{admin:1});if(!m||!m.role)try{sessionStorage.removeItem('akt')}catch{}}}
  render();refresh();setInterval(refresh,6e4)}
@@ -134,7 +146,7 @@ document.addEventListener('submit',async e=>{const f=e.target;if(f.id==='cf'){e.
 document.addEventListener('input',e=>{if(['iq','ij','ib'].includes(e.target.id))grid()});
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset.a==='mc'&&ADM()&&FIN){const id=t.dataset.id,v=Math.round(Math.max(0,+t.value||0)*100)/100;if(v)FIN.cost[id]=v;else delete FIN.cost[id];saveFin();const p=DB.p.find(x=>x.id===id),el=document.getElementById('lb-'+id);if(p&&el)el.textContent=lb(p);return}if(t.closest('dialog')||t.dataset.a!=='pp'||!ADM())return;const p=DB.p.find(x=>x.id===t.dataset.id);if(!p)return;
  const v=Math.max(t.dataset.k==='p'?1:0,Math.floor(+t.value)||0);p[t.dataset.k]=v;t.value=v;SV();const el=document.getElementById('pi-'+p.id);if(el)el.innerHTML=`<b>${rp(p.p)}</b> <span class="m">${p.s?'stok '+p.s:'habis'}</span>`;pushP()});
-return{init,render,sync,sync2:pushP,ai,refresh,role,srv:()=>SRV,nb,sLogin,out,panel}})();
+return{init,render,sync,sync2:pushP,ai,refresh,role,srv:()=>SRV,nb,sLogin,sReg,sName,out,panel}})();
 
 /* Tombol mata di semua kolom kata sandi: selalu tampil.
    Mata terbuka = kata sandi terlihat, mata coret = kata sandi tersembunyi. */

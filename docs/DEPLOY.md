@@ -71,6 +71,8 @@ Buka `https://<domain-kamu>/api/content` di peramban.
 | Variabel Redis tidak muncul | Cek **Settings → Environment Variables**. Kalau awalannya bukan `KV_`, sambungkan ulang database dengan prefix `KV`. |
 | "Terlalu banyak percobaan, tunggu 10 menit" | 10 kali gagal login dari satu IP. Tunggu 10 menit. |
 | Perubahan variabel tidak berefek | Deploy ulang dengan `vercel --prod`. |
+| 401 "Sesi lama sudah tidak berlaku" atau 403 "Token CSRF tidak valid" | Sesi dibuat sebelum pembaruan keamanan atau tab sudah terlalu lama terbuka. Keluar lalu masuk lagi. |
+| 403 "Permintaan lintas situs ditolak" | Permintaan datang dari domain lain atau bukan JSON. Akses situs lewat domain produksinya sendiri. |
 | Inbox dan edit admin tidak terlihat pengunjung lain | Situs masih mode lokal. Pastikan `/api/content` menjawab `configured:true`. |
 | Halaman meminta login Vercel | *Deployment Protection* aktif untuk URL deploy tertentu. Gunakan domain produksi, atau atur di **Settings → Deployment Protection**. |
 
@@ -78,4 +80,11 @@ Buka `https://<domain-kamu>/api/content` di peramban.
 
 - Jangan pernah meng-commit `.env.local` atau menempelkan token/kunci ke chat, issue, atau Pull Request.
 - Jika rahasia bocor, ganti segera: buat ulang `OWNER_KEY` dan rotasi token di dashboard Upstash.
-- Ganti kata sandi akun di `js/shop.js` (bagian boot di paling bawah) sebelum situs dipublikasikan. Akun demo hanya berlaku di mode lokal, tetapi sebaiknya tidak memakai kata sandi bawaan.
+- Ganti kata sandi akun demo di `js/shop.js` (bagian boot di paling bawah) sebelum situs dipublikasikan. Akun demo hanya berlaku di mode lokal (di mode server dibuang dari peramban), tetapi sebaiknya tidak memakai kata sandi bawaan.
+
+## Memperbarui Situs yang Sudah Online
+
+Variabel lingkungan dan database tersimpan di project Vercel, terpisah dari kode, jadi **tidak perlu diisi ulang** saat memperbarui.
+
+- **Lewat GitHub:** push ke `main`, Vercel membangun dan men-deploy otomatis.
+- **Tanpa GitHub:** dari folder yang berisi `index.html` dan `api`, jalankan `npx vercel@latest link` (pilih project yang sudah ada), lalu `npx vercel@latest --prod`. Cek dengan `npx vercel@latest env ls` bahwa `OWNER_KEY` dan variabel `KV_*` terbaca. Setelah deploy, semua pengguna perlu masuk ulang sekali.
