@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npx serve ."
+    "dev": "npx serve .",
+    "test": "node tests/api.test.js"
   },
   "engines": {
     "node": ">=18"
